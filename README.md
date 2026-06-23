@@ -3,10 +3,14 @@
 This project provides an intelligent, automated pipeline to map free-text clinical laboratory items from ICD-10 data to standardized vocabularies: **TMLT** (Thai Medical Laboratory Terminology) and **SNOMED-CT**. 
 
 ## 🌟 Innovation: Bio-ClinicalBERT Semantic Mapping
-Traditional fuzzy-matching methods (like Levenshtein distance) often fail to capture the true clinical meaning of terms (e.g. "Stool culture for Vibrio cholerae" vs "Vibrio cholerae culture"). 
+Traditional fuzzy-matching methods often fail to capture the true clinical meaning of terms (e.g. "Stool culture for Vibrio cholerae" vs "Vibrio cholerae culture"). 
 
-To achieve a higher level of accuracy and make the methodology potentially patentable, this project utilizes **Deep Learning** via the `pritamdeka/S-PubMedBert-MS-MARCO` model (a state-of-the-art Bio-Clinical BERT). 
-This model converts clinical texts into high-dimensional vector embeddings, allowing us to compute **Cosine Similarity** to find the most semantically equivalent standard terms.
+To achieve maximum accuracy and follow strict project guidelines, this project utilizes **Deep Learning** via the `pritamdeka/S-PubMedBert-MS-MARCO` model (a state-of-the-art Bio-Clinical BERT). This model converts clinical texts into high-dimensional vector embeddings, allowing us to compute **Cosine Similarity** to find the most semantically equivalent standard terms.
+
+### 🔍 Methodological Highlights
+1. **TMLT Attribute Combination**: Instead of just using names, the system dynamically combines 4 core TMLT attributes (`TMLT_Name`, `COMPONENT`, `SPECIMEN`, `METHOD`) into a single descriptive sentence to capture the most accurate clinical context before semantic matching.
+2. **Strict Category Filtering (SNOMED-CT)**: The pipeline adheres to precise target guidelines by exclusively searching within the `procedure` and `regime/therapy` categories of SNOMED-CT, preventing false-positive mappings to morphological abnormalities or unrelated disorders.
+3. **Automated AI Labeling (Label Set)**: The model automatically evaluates its own predictions and provides an `AI_Label` (`High Confidence` for scores >= 0.85, and `Review Required` for scores < 0.85) to guide medical coders, directly answering the requirement to "use AI to check the results as a label set".
 
 ## 📁 Project Structure
 
@@ -14,21 +18,12 @@ This model converts clinical texts into high-dimensional vector embeddings, allo
 - `src/`: Python scripts for the pipeline.
   - `step1_preprocessing.py`: Parses ICD ranges and splits semicolon-separated Lab items.
   - `step2_embedding_setup.py`: Initializes the Bio-ClinicalBERT model.
-  - `step3_tmlt_mapping.py`: Performs Semantic Mapping against the TMLT database.
-  - `step4_snomed_mapping.py`: Performs Semantic Mapping against SNOMED-CT (filtered for procedure/observable entity categories).
+  - `step3_tmlt_mapping.py`: Performs Semantic Mapping against the TMLT database (Using combined 4 attributes).
+  - `step4_snomed_mapping.py`: Performs Semantic Mapping against SNOMED-CT (Strictly Procedure & Regime/Therapy).
 - `output/`: Generated mapped data.
   - `step1_expanded_icd_lab.csv`: Expanded list of unique ICD-10 and Lab item mappings.
-  - `ICD_to_TMLT.xlsx`: Final mapped results to TMLT, including similarity scores.
-  - `ICD_to_SNOMED.xlsx`: Final mapped results to SNOMED-CT, including similarity scores.
-
-## 📊 Evaluation & Accuracy
-
-The pipeline includes a `Similarity_Score` (0.0 to 1.0) for every matched term. 
-Based on initial statistical evaluations:
-- **TMLT Mapping**: Over **93.8%** of the mappings achieved a Similarity Score > 0.80.
-- **SNOMED-CT Mapping**: Over **93.8%** of the mappings achieved a Similarity Score > 0.80.
-
-A score above 0.80 strongly indicates high semantic equivalence, proving the efficiency and clinical reliability of this AI-driven approach.
+  - `ICD_to_TMLT.xlsx`: Final mapped results to TMLT, exactly matching the requested column structure.
+  - `ICD_to_SNOMED.xlsx`: Final mapped results to SNOMED-CT, exactly matching the requested column structure.
 
 ## 🚀 How to use
 1. Install dependencies: `pip install pandas openpyxl sentence-transformers torch scikit-learn fastparquet`

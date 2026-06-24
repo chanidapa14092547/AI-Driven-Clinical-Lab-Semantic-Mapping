@@ -20,7 +20,8 @@ tmlt_df.loc[null_mask, 'ชื่อ TMLT'] = "-"
 tmlt_df.loc[null_mask, 'Component TMLT'] = "-"
 tmlt_df.loc[null_mask, 'รหัส LOINC_NUM'] = "-"
 tmlt_df.loc[null_mask, 'รหัส CGD_CODE'] = "-"
-tmlt_df.loc[null_mask, 'Similarity_Score'] = None
+tmlt_df.loc[null_mask, 'Similarity_Score'] = "-"
+tmlt_df.loc[null_mask, 'AI_Label'] = "-"
 
 # Fill other NaN with empty string for cleaner Excel
 tmlt_df = tmlt_df.fillna("-")
@@ -32,10 +33,10 @@ snomed_df = pd.read_excel(snomed_path)
 null_mask_s = snomed_df['รายการตรวจ lab'].isnull()
 
 snomed_df.loc[null_mask_s, 'รายการตรวจ lab'] = "-"
-snomed_df.loc[null_mask_s, 'SNOMED_ConceptId'] = "-"
-snomed_df.loc[null_mask_s, 'SNOMED_FSN'] = "-"
-snomed_df.loc[null_mask_s, 'SNOMED_Category'] = "-"
-snomed_df.loc[null_mask_s, 'Similarity_Score'] = None
+snomed_df.loc[null_mask_s, 'รหัส ConceptID'] = "-"
+snomed_df.loc[null_mask_s, 'ชื่อ FSN'] = "-"
+snomed_df.loc[null_mask_s, 'โค้ดที่ใช้ในการ Map'] = "-"
+snomed_df.loc[null_mask_s, 'AI_Label'] = "-"
 
 snomed_df = snomed_df.fillna("-")
 snomed_df.to_excel(snomed_path, index=False)

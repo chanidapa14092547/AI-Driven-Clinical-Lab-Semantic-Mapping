@@ -3,9 +3,11 @@ import os
 import re
 
 # Set up paths
-base_dir = r"C:\Users\USER\Downloads\DS MIMY\Mapping-Project"
-data_dir = os.path.join(base_dir, "DS MIMY")
-output_dir = os.path.join(base_dir, "output")
+from pathlib import Path
+
+base_dir = Path(__file__).resolve().parent.parent
+data_dir = base_dir / "DS MIMY"
+output_dir = base_dir / "output"
 
 # Create output dir if not exists
 os.makedirs(output_dir, exist_ok=True)

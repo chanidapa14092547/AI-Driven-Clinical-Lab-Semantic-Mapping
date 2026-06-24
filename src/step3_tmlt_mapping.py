@@ -49,19 +49,68 @@ similarities = cosine_similarity(lab_embs, tmlt_embs)
 best_match_indices = np.argmax(similarities, axis=1)
 best_match_scores = np.max(similarities, axis=1)
 
+def validation_flag(lab_text, matched_text, score):
+    lab = str(lab_text).lower()
+    matched = str(matched_text).lower()
+
+    flags = []
+
+    important_terms = [
+        "vibrio", "cholerae", "treponema", "pallidum",
+        "salmonella", "shigella", "escherichia", "coli",
+        "stool", "blood", "urine", "serum", "plasma",
+        "culture", "antigen", "antibody", "pcr", "igm", "igg"
+    ]
+
+    for term in important_terms:
+        if term in lab and term not in matched:
+            flags.append(f"Check missing term: {term}")
+
+    if "antigen" in lab and "antibody" in matched:
+        flags.append("Possible method mismatch: antigen vs antibody")
+
+    if "antibody" in lab and "antigen" in matched:
+        flags.append("Possible method mismatch: antibody vs antigen")
+
+    if "stool" in lab and "blood" in matched:
+        flags.append("Possible specimen mismatch: stool vs blood")
+
+    if "blood" in lab and "stool" in matched:
+        flags.append("Possible specimen mismatch: blood vs stool")
+
+    if score < 0.80:
+        flags.append("Low semantic similarity")
+
+    if len(flags) == 0:
+        return "Pass"
+    else:
+        return "; ".join(flags)
+
 # Build a mapping dictionary for fast lookup
 lab_to_tmlt_map = {}
 for i, lab in enumerate(unique_labs):
     best_idx = best_match_indices[i]
     matched_row = tmlt_df.iloc[best_idx]
-    score = round(best_match_scores[i], 4)
-    
+
+    raw_score = best_match_scores[i]
+
+    score = round(raw_score, 2)  
+
     if score >= 0.90:
         label = "High Confidence"
     elif score >= 0.80:
         label = "Review Required"
     else:
         label = "Low Confidence"
+
+    matched_text = f"""
+    {matched_row.get('TMLT_Name', '')}
+    {matched_row.get('COMPONENT', '')}
+    {matched_row.get('SPECIMEN', '')}
+    {matched_row.get('METHOD', '')}
+    """
+
+    flag = validation_flag(lab, matched_text, score)
     
     lab_to_tmlt_map[lab] = {
         'TMLT_Code': matched_row.get('TMLT_Code', ''),
@@ -70,7 +119,8 @@ for i, lab in enumerate(unique_labs):
         'LOINC_NUM': matched_row.get('LOINC_NUM', ''),
         'CGD_CODE': matched_row.get('CGD_CODE', ''),
         'Similarity_Score': score,
-        'AI_Label': label
+        'AI_Label': label,
+        "Validation_Flag": flag
     }
 
 print("Constructing final DataFrame...")
@@ -88,7 +138,8 @@ for index, row in icd_lab_df.iterrows():
             'รหัส LOINC_NUM': '-',
             'รหัส CGD_CODE': '-',
             'Similarity_Score': '-',
-            'AI_Label': '-'
+            'AI_Label': '-',
+            "Validation_Flag": '-'
         })
     else:
         match_info = lab_to_tmlt_map.get(lab_item, {})
@@ -101,7 +152,8 @@ for index, row in icd_lab_df.iterrows():
             'รหัส LOINC_NUM': match_info.get('LOINC_NUM', ''),
             'รหัส CGD_CODE': match_info.get('CGD_CODE', ''),
             'Similarity_Score': match_info.get('Similarity_Score', 0),
-            'AI_Label': match_info.get('AI_Label', '')
+            'AI_Label': match_info.get('AI_Label', ''),
+            'Validation_Flag': match_info.get('Validation_Flag', '')
         })
 
 final_df = pd.DataFrame(results)

@@ -95,7 +95,7 @@ for index, row in icd_lab_df.iterrows():
     if pd.isna(lab_item) or str(lab_item).strip() == "":
         results.append({
             'ICD-10': row['ICD-10'],
-            'รายกายตรวจ lab': '-',
+            'รายการตรวจ lab': '-',
             'รหัส ConceptID': '-',
             'ชื่อ FSN': '-',
             'AI_Label': '-'
@@ -107,7 +107,7 @@ for index, row in icd_lab_df.iterrows():
         
         results.append({
             'ICD-10': row['ICD-10'],
-            'รายกายตรวจ lab': lab_item,
+            'รายการตรวจ lab': lab_item,
             'รหัส ConceptID': match_info.get('conceptId', ''),
             'ชื่อ FSN': match_info.get('FSN', ''),
             'AI_Label': match_info.get('AI_Label', '')

@@ -5,9 +5,11 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 
-base_dir = r"C:\Users\USER\Downloads\DS MIMY\Mapping-Project"
-data_dir = os.path.join(base_dir, "DS MIMY")
-output_dir = os.path.join(base_dir, "output")
+from pathlib import Path
+
+base_dir = Path(__file__).resolve().parent.parent
+data_dir = base_dir / "DS MIMY"
+output_dir = base_dir / "output"
 
 print("Loading step 1 data...")
 icd_lab_df = pd.read_csv(os.path.join(output_dir, "step1_expanded_icd_lab.csv"))
@@ -54,8 +56,12 @@ for i, lab in enumerate(unique_labs):
     matched_row = tmlt_df.iloc[best_idx]
     score = round(best_match_scores[i], 4)
     
-    # AI Labeling logic
-    label = "High Confidence" if score >= 0.85 else "Review Required"
+    if score >= 0.90:
+        label = "High Confidence"
+    elif score >= 0.80:
+        label = "Review Required"
+    else:
+        label = "Low Confidence"
     
     lab_to_tmlt_map[lab] = {
         'TMLT_Code': matched_row.get('TMLT_Code', ''),

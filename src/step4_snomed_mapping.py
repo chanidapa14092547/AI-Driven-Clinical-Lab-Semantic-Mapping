@@ -98,7 +98,6 @@ for index, row in icd_lab_df.iterrows():
             'รายกายตรวจ lab': '-',
             'รหัส ConceptID': '-',
             'ชื่อ FSN': '-',
-            'โค้ดที่ใช้ในการ Map': '-',
             'AI_Label': '-'
         })
     else:
@@ -111,7 +110,6 @@ for index, row in icd_lab_df.iterrows():
             'รายกายตรวจ lab': lab_item,
             'รหัส ConceptID': match_info.get('conceptId', ''),
             'ชื่อ FSN': match_info.get('FSN', ''),
-            'โค้ดที่ใช้ในการ Map': mapping_code,
             'AI_Label': match_info.get('AI_Label', '')
         })
 

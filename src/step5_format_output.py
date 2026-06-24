@@ -1,8 +1,10 @@
 import pandas as pd
 import os
 
-base_dir = r"C:\Users\USER\Downloads\DS MIMY\Mapping-Project"
-output_dir = os.path.join(base_dir, "output")
+from pathlib import Path
+
+base_dir = Path(__file__).resolve().parent.parent
+output_dir = base_dir / "output"
 
 tmlt_path = os.path.join(output_dir, "ICD_to_TMLT.xlsx")
 snomed_path = os.path.join(output_dir, "ICD_to_SNOMED.xlsx")

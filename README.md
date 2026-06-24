@@ -28,3 +28,10 @@ To achieve maximum accuracy and follow strict project guidelines, this project u
 ## 🚀 How to use
 1. Install dependencies: `pip install pandas openpyxl sentence-transformers torch scikit-learn fastparquet`
 2. Run the pipeline scripts in numerical order from the `src/` directory.
+
+## 🧑‍⚕️ Manual QA & Expert Review (Current Phase)
+While the Bio-ClinicalBERT model provides highly accurate semantic similarity mappings, differences between international clinical guidelines (ICD-10) and national laboratory standards (TMLT) require expert review. 
+To address "AI Hallucinations" (e.g., the AI mapping a DNA detection test to an Antigen test because the DNA test does not exist in the national standard), we have implemented a **Manual Quality Assurance** phase:
+- **Line-by-Line Review**: Expert medical coders review the AI's output (`ICD_to_TMLT.xlsx`) in batches.
+- **Strict Method & Specimen Rules**: Ensuring that the requested specimen (e.g., Sputum vs. CSF) and method (e.g., Culture vs. NAAT) precisely match the TMLT constraints.
+- **Fallback to Unmapped (`-`)**: Any test that cannot be safely and clinically mapped to the TMLT standard is explicitly unmapped (set to `-`) to prevent false or non-compliant medical billing records.

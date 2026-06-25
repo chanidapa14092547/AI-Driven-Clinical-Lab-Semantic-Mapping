@@ -82,7 +82,7 @@ def is_hard_conflict(lab_text, matched_text):
     # 2. Pathogen Conflict
     # Get all words longer than 3
     words = [w for w in lab.replace('/', ' ').replace('-', ' ').split() if len(w) > 3]
-    ignore_words = ["blood", "urine", "stool", "culture", "serum", "tissue", "wound", "respiratory", "other", "bacterial", "viral", "fungal", "parasite", "fluid", "swab", "smear", "stain", "naat", "test", "testing", "panel", "screen", "detection", "examination", "drug", "susceptibility", "complex", "disease", "infection"]
+    ignore_words = ["blood", "urine", "stool", "culture", "serum", "tissue", "wound", "respiratory", "other", "bacterial", "viral", "fungal", "parasite", "fluid", "swab", "smear", "stain", "naat", "test", "testing", "panel", "screen", "detection", "examination", "drug", "susceptibility", "complex", "disease", "infection", "anti", "antibodies", "antibody", "antigen"]
     
     # Filter to only potential pathogen words
     pathogen_words = [w for w in words if w not in ignore_words]

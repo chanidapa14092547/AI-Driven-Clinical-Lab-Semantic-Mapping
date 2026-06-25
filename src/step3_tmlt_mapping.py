@@ -46,82 +46,72 @@ lab_embs = model.encode(unique_labs, batch_size=64, show_progress_bar=False)
 
 print("Calculating similarities and matching...")
 similarities = cosine_similarity(lab_embs, tmlt_embs)
-best_match_indices = np.argmax(similarities, axis=1)
-best_match_scores = np.max(similarities, axis=1)
-
-def validation_flag(lab_text, matched_text, score):
+def is_hard_conflict(lab_text, matched_text):
     lab = str(lab_text).lower()
     matched = str(matched_text).lower()
+    
+    # 1. Method Conflict
+    if "antigen" in lab and "antibody" in matched: return True
+    if "antibody" in lab and "antigen" in matched: return True
+    
+    lab_is_naat = any(x in lab for x in ["dna", "naat", "pcr", "rna"])
+    if lab_is_naat and ("culture" in matched or "antibody" in matched or "igm" in matched or "igg" in matched): return True
+    
+    if "culture" in lab and any(x in matched for x in ["stain", "smear", "microscopic", "dna", "naat", "antibody", "igm"]): return True
+    
+    # 2. Pathogen Conflict
+    words = [w for w in lab.replace('/', ' ').split() if len(w) > 3]
+    if words:
+        first_word = words[0]
+        ignore_words = ["blood", "urine", "stool", "culture", "serum", "tissue", "wound", "respiratory", "csf", "other", "bacterial", "viral", "fungal", "parasite", "fluid", "swab", "smear", "stain", "naat", "pcr", "from", "with", "test", "testing", "panel", "screen"]
+        if first_word not in ignore_words:
+            if first_word not in matched:
+                return True 
 
-    flags = []
+    # 3. Specimen Strict Conflict
+    if "stool" in lab and any(x in matched for x in ["blood", "serum", "plasma", "csf"]): return True
+    if "blood" in lab and any(x in matched for x in ["stool", "urine", "sputum"]): return True
+    if "csf" in lab and any(x in matched for x in ["stool", "blood", "urine"]): return True
+    
+    return False
 
-    important_terms = [
-        "vibrio", "cholerae", "treponema", "pallidum",
-        "salmonella", "shigella", "escherichia", "coli",
-        "stool", "blood", "urine", "serum", "plasma",
-        "culture", "antigen", "antibody", "pcr", "igm", "igg"
-    ]
-
-    for term in important_terms:
-        if term in lab and term not in matched:
-            flags.append(f"Check missing term: {term}")
-
-    if "antigen" in lab and "antibody" in matched:
-        flags.append("Possible method mismatch: antigen vs antibody")
-
-    if "antibody" in lab and "antigen" in matched:
-        flags.append("Possible method mismatch: antibody vs antigen")
-
-    if "stool" in lab and "blood" in matched:
-        flags.append("Possible specimen mismatch: stool vs blood")
-
-    if "blood" in lab and "stool" in matched:
-        flags.append("Possible specimen mismatch: blood vs stool")
-
-    if score < 0.80:
-        flags.append("Low semantic similarity")
-
-    if len(flags) == 0:
-        return "Pass"
-    else:
-        return "; ".join(flags)
+top_k = 5
+top_k_indices = np.argsort(similarities, axis=1)[:, -top_k:][:, ::-1]
 
 # Build a mapping dictionary for fast lookup
 lab_to_tmlt_map = {}
 for i, lab in enumerate(unique_labs):
-    best_idx = best_match_indices[i]
-    matched_row = tmlt_df.iloc[best_idx]
-
-    raw_score = best_match_scores[i]
-
-    score = round(raw_score, 2)  
-
-    if score >= 0.90:
-        label = "High Confidence"
-    elif score >= 0.80:
-        label = "Review Required"
-    else:
-        label = "Low Confidence"
-
-    matched_text = f"""
-    {matched_row.get('TMLT_Name', '')}
-    {matched_row.get('COMPONENT', '')}
-    {matched_row.get('SPECIMEN', '')}
-    {matched_row.get('METHOD', '')}
-    """
-
-    flag = validation_flag(lab, matched_text, score)
+    found_valid_match = False
     
-    lab_to_tmlt_map[lab] = {
-        'TMLT_Code': matched_row.get('TMLT_Code', ''),
-        'TMLT_Name': matched_row.get('TMLT_Name', ''),
-        'COMPONENT': matched_row.get('COMPONENT', ''),
-        'LOINC_NUM': matched_row.get('LOINC_NUM', ''),
-        'CGD_CODE': matched_row.get('CGD_CODE', ''),
-        'Similarity_Score': score,
-        'AI_Label': label,
-        "Validation_Flag": flag
-    }
+    for rank in range(top_k):
+        idx = top_k_indices[i, rank]
+        score = similarities[i, idx]
+        
+        if score < 0.85:
+            break
+            
+        matched_row = tmlt_df.iloc[idx]
+        matched_text = f"{matched_row.get('TMLT_Name', '')} {matched_row.get('COMPONENT', '')} {matched_row.get('SPECIMEN', '')} {matched_row.get('METHOD', '')}"
+        
+        if not is_hard_conflict(lab, matched_text):
+            lab_to_tmlt_map[lab] = {
+                'TMLT_Code': matched_row.get('TMLT_Code', ''),
+                'TMLT_Name': matched_row.get('TMLT_Name', ''),
+                'COMPONENT': matched_row.get('COMPONENT', ''),
+                'LOINC_NUM': matched_row.get('LOINC_NUM', ''),
+                'CGD_CODE': matched_row.get('CGD_CODE', ''),
+                'Similarity_Score': round(score, 4),
+                'AI_Label': "High Confidence" if score >= 0.90 else "Review Required",
+                'Validation_Flag': "Passed Rules"
+            }
+            found_valid_match = True
+            break
+            
+    if not found_valid_match:
+        lab_to_tmlt_map[lab] = {
+            'TMLT_Code': '-', 'TMLT_Name': '-', 'COMPONENT': '-', 'LOINC_NUM': '-', 'CGD_CODE': '-',
+            'Similarity_Score': '-', 'AI_Label': '-', 'Validation_Flag': 'Rejected by Rules'
+        }
 
 print("Constructing final DataFrame...")
 results = []
@@ -139,7 +129,7 @@ for index, row in icd_lab_df.iterrows():
             'รหัส CGD_CODE': '-',
             'Similarity_Score': '-',
             'AI_Label': '-',
-            "Validation_Flag": '-'
+            'Validation_Flag': '-'
         })
     else:
         match_info = lab_to_tmlt_map.get(lab_item, {})

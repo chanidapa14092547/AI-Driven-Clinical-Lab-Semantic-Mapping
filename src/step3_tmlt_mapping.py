@@ -91,9 +91,11 @@ def is_hard_conflict(lab_text, matched_text):
         first_pathogen = pathogen_words[0]
         # Handle variations like mycobacterial -> mycobacter
         prefix = first_pathogen[:6]
+        
+        general_terms = ["bacteria identified", "virus identified", "fungus identified", "fungi identified", "parasite", "ova", "pathogen", "microscopic observation", "organism specific culture", "culture", "identification"]
+        
         if prefix not in matched:
             # Bypass if matched text is a general identification term
-            general_terms = ["bacteria identified", "virus identified", "fungus identified", "fungi identified", "parasite", "ova", "pathogen", "microscopic observation", "organism specific culture", "culture", "identification"]
             # Only bypass if the general term makes sense for the lab test, but BERT usually handles this.
             if not any(g in matched for g in general_terms):
                 return True 

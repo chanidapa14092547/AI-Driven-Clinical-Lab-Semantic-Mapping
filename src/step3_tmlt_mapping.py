@@ -92,7 +92,11 @@ def is_hard_conflict(lab_text, matched_text):
         # Handle variations like mycobacterial -> mycobacter
         prefix = first_pathogen[:6]
         if prefix not in matched:
-            return True 
+            # Bypass if matched text is a general identification term
+            general_terms = ["bacteria identified", "virus identified", "fungus identified", "fungi identified", "parasite", "ova", "pathogen", "microscopic observation", "organism specific culture", "culture", "identification"]
+            # Only bypass if the general term makes sense for the lab test, but BERT usually handles this.
+            if not any(g in matched for g in general_terms):
+                return True 
             
         # Check species if available (e.g. clostridium perfringens vs tetani)
         if len(pathogen_words) > 1:
@@ -100,12 +104,10 @@ def is_hard_conflict(lab_text, matched_text):
             if len(second_pathogen) > 3 and second_pathogen not in ["spp.", "spp", "species"]:
                 prefix2 = second_pathogen[:5]
                 if prefix2 not in matched:
-                    # Only reject if the matched text has a specific different species
-                    # We can't strictly reject if missing, because TMLT might just say "Clostridium sp"
-                    # But if TMLT says "tetani", it's a mismatch.
                     if " sp " not in matched and " sp." not in matched and "species" not in matched:
-                        if "virus" not in second_pathogen:
-                            pass # Too complex to strict reject, let it pass and review
+                        if not any(g in matched for g in general_terms):
+                            if "virus" not in second_pathogen:
+                                pass # Too complex to strict reject, let it pass and review
 
     # 3. Specimen Strict Conflict
     if has_any(lab, ["stool", "feces"]) and has_any(matched, ["blood", "serum", "plasma", "csf"]): return True

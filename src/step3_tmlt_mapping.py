@@ -50,28 +50,67 @@ def is_hard_conflict(lab_text, matched_text):
     lab = str(lab_text).lower()
     matched = str(matched_text).lower()
     
+    # Helper to check lists of terms
+    def has_any(text, terms):
+        # use word boundaries or just simple in
+        # For 'ab' and 'ag', simple 'in' might match 'swab' or 'flag'. 
+        # So we pad with spaces: f" {term} " or check boundaries.
+        import re
+        for t in terms:
+            if re.search(r'\b' + re.escape(t) + r'\b', text):
+                return True
+        return False
+
     # 1. Method Conflict
-    if "antigen" in lab and "antibody" in matched: return True
-    if "antibody" in lab and "antigen" in matched: return True
+    lab_is_ag = has_any(lab, ["antigen", "ag"])
+    lab_is_ab = has_any(lab, ["antibody", "ab", "igm", "igg"])
+    match_is_ag = has_any(matched, ["antigen", "ag"])
+    match_is_ab = has_any(matched, ["antibody", "ab", "igm", "igg", "igg+igm"])
+
+    if lab_is_ag and match_is_ab: return True
+    if lab_is_ab and match_is_ag: return True
     
-    lab_is_naat = any(x in lab for x in ["dna", "naat", "pcr", "rna"])
-    if lab_is_naat and ("culture" in matched or "antibody" in matched or "igm" in matched or "igg" in matched): return True
+    lab_is_naat = has_any(lab, ["dna", "naat", "pcr", "rna"])
+    match_is_culture = has_any(matched, ["culture"])
+    match_is_stain = has_any(matched, ["stain", "smear", "microscopic", "microscopy"])
     
-    if "culture" in lab and any(x in matched for x in ["stain", "smear", "microscopic", "dna", "naat", "antibody", "igm"]): return True
+    if lab_is_naat and (match_is_culture or match_is_ab or match_is_ag or match_is_stain): return True
+    
+    lab_is_culture = has_any(lab, ["culture"])
+    if lab_is_culture and (match_is_stain or lab_is_naat or match_is_ab or match_is_ag): return True
     
     # 2. Pathogen Conflict
-    words = [w for w in lab.replace('/', ' ').split() if len(w) > 3]
-    if words:
-        first_word = words[0]
-        ignore_words = ["blood", "urine", "stool", "culture", "serum", "tissue", "wound", "respiratory", "csf", "other", "bacterial", "viral", "fungal", "parasite", "fluid", "swab", "smear", "stain", "naat", "pcr", "from", "with", "test", "testing", "panel", "screen"]
-        if first_word not in ignore_words:
-            if first_word not in matched:
-                return True 
+    # Get all words longer than 3
+    words = [w for w in lab.replace('/', ' ').replace('-', ' ').split() if len(w) > 3]
+    ignore_words = ["blood", "urine", "stool", "culture", "serum", "tissue", "wound", "respiratory", "other", "bacterial", "viral", "fungal", "parasite", "fluid", "swab", "smear", "stain", "naat", "test", "testing", "panel", "screen", "detection", "examination", "drug", "susceptibility", "complex", "disease", "infection"]
+    
+    # Filter to only potential pathogen words
+    pathogen_words = [w for w in words if w not in ignore_words]
+    
+    if len(pathogen_words) > 0:
+        first_pathogen = pathogen_words[0]
+        # Handle variations like mycobacterial -> mycobacter
+        prefix = first_pathogen[:6]
+        if prefix not in matched:
+            return True 
+            
+        # Check species if available (e.g. clostridium perfringens vs tetani)
+        if len(pathogen_words) > 1:
+            second_pathogen = pathogen_words[1]
+            if len(second_pathogen) > 3 and second_pathogen not in ["spp.", "spp", "species"]:
+                prefix2 = second_pathogen[:5]
+                if prefix2 not in matched:
+                    # Only reject if the matched text has a specific different species
+                    # We can't strictly reject if missing, because TMLT might just say "Clostridium sp"
+                    # But if TMLT says "tetani", it's a mismatch.
+                    if " sp " not in matched and " sp." not in matched and "species" not in matched:
+                        if "virus" not in second_pathogen:
+                            pass # Too complex to strict reject, let it pass and review
 
     # 3. Specimen Strict Conflict
-    if "stool" in lab and any(x in matched for x in ["blood", "serum", "plasma", "csf"]): return True
-    if "blood" in lab and any(x in matched for x in ["stool", "urine", "sputum"]): return True
-    if "csf" in lab and any(x in matched for x in ["stool", "blood", "urine"]): return True
+    if has_any(lab, ["stool", "feces"]) and has_any(matched, ["blood", "serum", "plasma", "csf"]): return True
+    if has_any(lab, ["blood", "serum", "plasma"]) and has_any(matched, ["stool", "urine", "sputum", "feces"]): return True
+    if has_any(lab, ["csf"]) and has_any(matched, ["stool", "blood", "urine", "sputum"]): return True
     
     return False
 

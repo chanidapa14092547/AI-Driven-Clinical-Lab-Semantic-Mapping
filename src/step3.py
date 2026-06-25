@@ -306,7 +306,7 @@ for index, row in icd_lab_df.iterrows():
 final_df = pd.DataFrame(results)
 final_df = final_df.fillna("-")
 
-output_excel = os.path.join(output_dir, "ICD_to_TMLT.xlsx")
+output_excel = os.path.join(output_dir, "ICD_to_TMLT_1.xlsx")
 
 print(f"Saving results to {output_excel}...")
 final_df.to_excel(output_excel, index=False)

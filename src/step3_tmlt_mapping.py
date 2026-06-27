@@ -133,8 +133,8 @@ for i, lab in enumerate(unique_labs):
         idx = top_k_indices[i, rank]
         sim_score = similarities[i, idx]
         
-        # In SapBERT, scores might be generally higher or lower, but we still threshold at 0.80
-        if sim_score < 0.80:
+        # In SapBERT, scores might be generally higher or lower, but we still threshold at 0.40
+        if sim_score < 0.40:
             break
             
         matched_row = tmlt_df.iloc[idx]
@@ -168,7 +168,7 @@ for i, lab in enumerate(unique_labs):
                 'Specimen_Score': round(s_score, 2),
                 'Method_Score': round(m_score, 2),
                 'Final_Match_Score': round(best_final_score, 4),
-                'AI_Label': "High Confidence" if best_final_score >= 0.70 else "Review Required",
+                'AI_Label': "High Confidence" if best_final_score >= 0.50 else "Review Required",
                 'Validation_Flag': "Passed Rules"
             }
             

@@ -155,6 +155,25 @@ for i, lab in enumerate(unique_labs):
         if final_match_score > best_final_score:
             best_final_score = final_match_score
             
+        if final_match_score < 0.50:
+            label = "Rejected"
+            val_flag = "Rejected by Rules"
+            best_candidate = {
+                'TMLT_Code': '-', 'TMLT_Name': '-', 'COMPONENT': '-', 'SPECIMEN': '-', 'METHOD': '-', 'LOINC_NUM': '-', 'CGD_CODE': '-',
+                'Similarity_Score': round(sim_score, 4), 'Component_Score': round(c_score, 2), 'Specimen_Score': round(s_score, 2), 'Method_Score': round(m_score, 2), 'Final_Match_Score': round(best_final_score, 4),
+                'AI_Label': label, 'Validation_Flag': val_flag
+            }
+        else:
+            if final_match_score >= 0.85:
+                label = "Very High Confidence"
+                val_flag = "Passed Rules"
+            elif final_match_score >= 0.70:
+                label = "High Confidence"
+                val_flag = "Passed Rules"
+            else:
+                label = "Medium Confidence"
+                val_flag = "Passed Rules"
+                
             best_candidate = {
                 'TMLT_Code': matched_row.get('TMLT_Code', ''),
                 'TMLT_Name': matched_row.get('TMLT_Name', ''),
@@ -168,8 +187,8 @@ for i, lab in enumerate(unique_labs):
                 'Specimen_Score': round(s_score, 2),
                 'Method_Score': round(m_score, 2),
                 'Final_Match_Score': round(best_final_score, 4),
-                'AI_Label': "High Confidence" if best_final_score >= 0.50 else "Review Required",
-                'Validation_Flag': "Passed Rules"
+                'AI_Label': label,
+                'Validation_Flag': val_flag
             }
             
     if best_candidate is not None:
@@ -229,7 +248,8 @@ for index, row in icd_lab_df.iterrows():
 final_df = pd.DataFrame(results)
 final_df = final_df.fillna("-")
 
-output_excel = os.path.join(output_dir, "ICD_to_TMLT.xlsx")
+output_excel = os.path.join(output_dir, "TMLT", "ICD_to_TMLT.xlsx")
+os.makedirs(os.path.dirname(output_excel), exist_ok=True)
 print(f"Saving results to {output_excel}...")
 final_df.to_excel(output_excel, index=False)
 

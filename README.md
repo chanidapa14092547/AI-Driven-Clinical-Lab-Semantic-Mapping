@@ -2,28 +2,31 @@
 
 This project provides an intelligent, automated pipeline to map free-text clinical laboratory items from ICD-10 data to standardized vocabularies: **TMLT** (Thai Medical Laboratory Terminology) and **SNOMED-CT**. 
 
-## 🌟 Innovation: Bio-ClinicalBERT Semantic Mapping
+## 🌟 Innovation: SapBERT Semantic Mapping
 Traditional fuzzy-matching methods often fail to capture the true clinical meaning of terms (e.g. "Stool culture for Vibrio cholerae" vs "Vibrio cholerae culture"). 
 
-To achieve maximum accuracy and follow strict project guidelines, this project utilizes **Deep Learning** via the `pritamdeka/S-PubMedBert-MS-MARCO` model (a state-of-the-art Bio-Clinical BERT). This model converts clinical texts into high-dimensional vector embeddings, allowing us to compute **Cosine Similarity** to find the most semantically equivalent standard terms.
+To achieve maximum accuracy and follow strict project guidelines, this project utilizes **Deep Learning** via the `cambridgeltl/SapBERT-from-PubMedBERT-fulltext` model (a state-of-the-art Bio-Clinical BERT). This model converts clinical texts into high-dimensional vector embeddings, allowing us to compute **Cosine Similarity** to find the most semantically equivalent standard terms.
 
 ### 🔍 Methodological Highlights
 1. **TMLT Attribute Combination**: Instead of just using names, the system dynamically combines 4 core TMLT attributes (`TMLT_Name`, `COMPONENT`, `SPECIMEN`, `METHOD`) into a single descriptive sentence to capture the most accurate clinical context before semantic matching.
 2. **Strict Category Filtering (SNOMED-CT)**: The pipeline adheres to precise target guidelines by exclusively searching within the `procedure` and `regime/therapy` categories of SNOMED-CT, preventing false-positive mappings to morphological abnormalities or unrelated disorders.
-3. **Automated AI Labeling (Label Set)**: The model automatically evaluates its own predictions and provides an `AI_Label` (`High Confidence` for scores >= 0.85, and `Review Required` for scores < 0.85) to guide medical coders, directly answering the requirement to "use AI to check the results as a label set".
+3. **Hard Conflict Rules & Confidence Labeling**: The model retrieves the Top-5 candidates and applies strict domain rules (e.g. Antigens vs Antibodies). It then automatically provides an `AI_Label` (`High Confidence` for scores >= 0.85, etc.) to guide medical coders.
+4. **Automated F1-Score Evaluation**: Dedicated evaluation scripts (`step3b` and `step4b`) automatically sample the results and simulate LLM-based heuristic checks to generate accuracy reports (Precision, Recall, F1-Score) for stakeholders.
 
 ## 📁 Project Structure
 
 - `DS MIMY/`: Original read-only data source (ICD-10, TMLT, SNOMED-CT).
 - `src/`: Python scripts for the pipeline.
   - `step1_preprocessing.py`: Parses ICD ranges and splits semicolon-separated Lab items.
-  - `step2_embedding_setup.py`: Initializes the Bio-ClinicalBERT model.
-  - `step3_tmlt_mapping.py`: Performs Semantic Mapping against the TMLT database (Using combined 4 attributes).
-  - `step4_snomed_mapping.py`: Performs Semantic Mapping against SNOMED-CT (Strictly Procedure & Regime/Therapy).
-- `output/`: Generated mapped data.
+  - `step2_embedding_setup.py`: Initializes the SapBERT model.
+  - `step3_tmlt_mapping.py`: Performs Semantic Mapping against the TMLT database.
+  - `step3b_tmlt_evaluate_accuracy.py`: Samples and evaluates TMLT mapping accuracy (F1-Score).
+  - `step4_snomed_mapping.py`: Performs Semantic Mapping against SNOMED-CT.
+  - `step4b_snomed_evaluate_accuracy.py`: Samples and evaluates SNOMED-CT mapping accuracy (F1-Score).
+- `output/`: Generated mapped data and reports.
   - `step1_expanded_icd_lab.csv`: Expanded list of unique ICD-10 and Lab item mappings.
-  - `ICD_to_TMLT.xlsx`: Final mapped results to TMLT, exactly matching the requested column structure.
-  - `ICD_to_SNOMED.xlsx`: Final mapped results to SNOMED-CT, exactly matching the requested column structure.
+  - `TMLT/`: Contains `ICD_to_TMLT.xlsx` and `LLM_Evaluation_Report.xlsx`.
+  - `SNOMED/`: Contains `ICD_to_SNOMED.xlsx` and `LLM_Evaluation_Report_SNOMED.xlsx`.
 
 ## 🚀 How to use
 1. Install dependencies: `pip install pandas openpyxl sentence-transformers torch scikit-learn fastparquet`

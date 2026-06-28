@@ -1,14 +1,30 @@
-ICD-LAB
+# 🧬 Hybrid Semantic Mapping Workflow
+
+ICD-LAB Data
     ↓
-Preprocessing
+1️⃣ **Preprocessing** (`step1`)
+    - Expand semicolon-separated lab items
     ↓
-Semantic Embedding
-(Bio Clinical BERT)
+2️⃣ **Semantic Embedding Setup** (`step2`)
+    - Load `SapBERT` model
     ↓
-Cosine Similarity
+3️⃣ **TMLT Semantic Mapping** (`step3`)
+    - Combine 4 attributes (`TMLT_Name`, `COMPONENT`, `SPECIMEN`, `METHOD`)
+    - Cosine Similarity (Top-5 search)
+    - Hard Conflict Rules & AI Confidence Labeling
     ↓
-Best Match
+3️⃣🅱️ **TMLT Accuracy Evaluation** (`step3b`)
+    - Heuristic evaluation simulation
+    - F1-Score Report Generation
     ↓
-AI Confidence Label
+4️⃣ **SNOMED-CT Semantic Mapping** (`step4`)
+    - Strict Category Filtering (Procedure / Regime)
+    - Cosine Similarity (Top-5 search)
+    - Hard Conflict Rules & AI Confidence Labeling
     ↓
-Export Excel
+4️⃣🅱️ **SNOMED Accuracy Evaluation** (`step4b`)
+    - Heuristic evaluation simulation
+    - F1-Score Report Generation
+    ↓
+5️⃣ **Export Final Results**
+    - Cleaned output folders (`output/TMLT`, `output/SNOMED`)

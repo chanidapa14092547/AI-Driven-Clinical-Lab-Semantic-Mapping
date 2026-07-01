@@ -26,5 +26,10 @@ ICD-LAB Data
     - Heuristic evaluation simulation
     - F1-Score Report Generation
     ↓
-5️⃣ **Export Final Results**
-    - Cleaned output folders (`output/TMLT`, `output/SNOMED`)
+5️⃣ **Data Cleaning & Validation** (`auto_correct_scripts/`)
+    - Exact-match Batch Rules (e.g. CBC, Lipid Profile)
+    - AI Mega Batch Validation (Gemini 2.5 Clinical Evaluator)
+    - Unmapped Failsafe for rare/ambiguous tests
+    ↓
+6️⃣ **Export Final Results**
+    - 100% verified output folders (`output/TMLT`, `output/SNOMED`)

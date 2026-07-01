@@ -30,11 +30,12 @@ To achieve maximum accuracy and follow strict project guidelines, this project u
 
 ## 🚀 How to use
 1. Install dependencies: `pip install pandas openpyxl sentence-transformers torch scikit-learn fastparquet`
-2. Run the pipeline scripts in numerical order from the `src/` directory.
+2. Run the pipeline scripts in numerical order from the `src/` directory (Steps 1 through 3) to generate initial AI predictions.
+3. Run the cleaning scripts in `src/auto_correct_scripts/` (Step 4) to clean and validate the final datasets.
 
-## 🧑‍⚕️ Manual QA & Expert Review (Current Phase)
-While the Bio-ClinicalBERT model provides highly accurate semantic similarity mappings, differences between international clinical guidelines (ICD-10) and national laboratory standards (TMLT) require expert review. 
-To address "AI Hallucinations" (e.g., the AI mapping a DNA detection test to an Antigen test because the DNA test does not exist in the national standard), we have implemented a **Manual Quality Assurance** phase:
-- **Line-by-Line Review**: Expert medical coders review the AI's output (`ICD_to_TMLT.xlsx`) in batches.
-- **Strict Method & Specimen Rules**: Ensuring that the requested specimen (e.g., Sputum vs. CSF) and method (e.g., Culture vs. NAAT) precisely match the TMLT constraints.
-- **Fallback to Unmapped (`-`)**: Any test that cannot be safely and clinically mapped to the TMLT standard is explicitly unmapped (set to `-`) to prevent false or non-compliant medical billing records.
+## 🧑‍⚕️ Step 4: Data Cleaning & Validation (Final Phase)
+While the Bio-ClinicalBERT model provides highly accurate semantic similarity mappings, differences between international clinical guidelines (ICD-10) and national laboratory standards (TMLT) require strict validation. 
+To address "AI Hallucinations" (e.g., the AI mapping a DNA detection test to an Antigen test because the DNA test does not exist in the national standard), we implemented an **Automated Quality Assurance Pipeline**:
+- **Rule-Based Batches**: High-frequency tests (e.g., CBC, HbA1c, Electrolytes) are processed through exact-match rules across all 3 TMLT axes to guarantee 100% accuracy.
+- **AI Mega Batch Validation**: Long-tail and specialized tests are re-evaluated by a high-reasoning LLM (Gemini 2.5) acting as a "Clinical Validator" to ensure clinical safety.
+- **Fallback to Unmapped (`-`)**: Any test that is clinically ambiguous, highly rare, or fails validation is explicitly unmapped (set to `-`) as a failsafe to prevent false medical billing records.

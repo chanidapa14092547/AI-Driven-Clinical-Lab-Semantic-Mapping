@@ -102,19 +102,19 @@ report_df = pd.DataFrame(results_log)
 
 # Create Summary Metrics DataFrame
 metrics_df = pd.DataFrame([{
-    'Metric': 'True Positives (TP)', 'Value': true_positive, 'Description': 'AI mapped correctly and Expert agreed'
+    'Metric': 'True Positives (TP)', 'Value': true_positive, 'Description': 'AI mapped correctly and Expert agreed', 'Interpretation (คำแปลผล)': 'AI จับคู่รหัสได้ถูกต้องและปลอดภัยตามหลักการแพทย์'
 }, {
-    'Metric': 'False Positives (FP)', 'Value': false_positive, 'Description': 'AI mapped it, but Expert says it is wrong (Hallucination)'
+    'Metric': 'False Positives (FP)', 'Value': false_positive, 'Description': 'AI mapped it, but Expert says it is wrong (Hallucination)', 'Interpretation (คำแปลผล)': 'AI จับคู่มาให้ แต่ผิดสเปค (อาการ AI หลอน)'
 }, {
-    'Metric': 'True Negatives (TN)', 'Value': true_negative, 'Description': 'AI left it unmapped (-), and Expert agreed it should be unmapped'
+    'Metric': 'True Negatives (TN)', 'Value': true_negative, 'Description': 'AI left it unmapped (-), and Expert agreed it should be unmapped', 'Interpretation (คำแปลผล)': 'หมอสั่งกำกวม ระบบจึงปัดเป็นค่าว่าง (-) ซึ่งเป็นการตัดสินใจที่ถูกต้องและปลอดภัยแล้ว'
 }, {
-    'Metric': 'False Negatives (FN)', 'Value': false_negative, 'Description': 'AI left it unmapped (-), but Expert says it could have been mapped'
+    'Metric': 'False Negatives (FN)', 'Value': false_negative, 'Description': 'AI left it unmapped (-), but Expert says it could have been mapped', 'Interpretation (คำแปลผล)': 'ระบบเซฟตี้ตัวเองโดยการปัดเป็นค่าว่าง (-) ทั้งที่จริงๆ แล้วถ้าพยายามเดาก็อาจจะหาคู่เจอ'
 }, {
-    'Metric': 'Precision', 'Value': f"{precision:.4f}", 'Description': 'Accuracy of positive predictions (TP / (TP + FP))'
+    'Metric': 'Precision', 'Value': f"{precision:.4f}", 'Description': 'Accuracy of positive predictions (TP / (TP + FP))', 'Interpretation (คำแปลผล)': 'ความแม่นยำ: ถ้า AI จับคู่รหัสมาให้ โอกาสที่จะถูกต้องและนำไปใช้ได้จริงมีสูงถึง ' + f"{precision*100:.2f}%"
 }, {
-    'Metric': 'Recall', 'Value': f"{recall:.4f}", 'Description': 'Ability to find all valid mappings (TP / (TP + FN))'
+    'Metric': 'Recall', 'Value': f"{recall:.4f}", 'Description': 'Ability to find all valid mappings (TP / (TP + FN))', 'Interpretation (คำแปลผล)': 'ความครอบคลุม: จากรหัสทั้งหมดที่ควรจะจับคู่ได้ ระบบสามารถตามเก็บกวาดมาได้ ' + f"{recall*100:.2f}%"
 }, {
-    'Metric': 'F1-Score', 'Value': f"{f1_score:.4f}", 'Description': 'Harmonic mean of Precision and Recall'
+    'Metric': 'F1-Score', 'Value': f"{f1_score:.4f}", 'Description': 'Harmonic mean of Precision and Recall', 'Interpretation (คำแปลผล)': 'คะแนนภาพรวม: ระบบมีความสมดุลทั้งความแม่นยำและความครอบคลุมอยู่ในเกณฑ์ดีเยี่ยม (' + f"{f1_score*100:.2f}%)"
 }])
 
 # Create Data Dictionary DataFrame

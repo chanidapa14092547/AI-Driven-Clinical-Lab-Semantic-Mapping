@@ -15,7 +15,6 @@ To achieve maximum accuracy and follow strict project guidelines, this project u
 
 ## Project Structure
 
-- `DS MIMY/`: Original read-only data source (ICD-10, TMLT, SNOMED-CT).
 - `src/`: Python scripts for the pipeline.
   - `step1_preprocessing.py`: Parses ICD ranges and splits semicolon-separated Lab items.
   - `step2_embedding_setup.py`: Initializes the SapBERT model.

@@ -3,7 +3,7 @@ import os
 import difflib
 
 # Setup paths
-base_dir = r"C:\Users\USER\Downloads\DS MIMY\Mapping-Project"
+base_dir = r"C:\Users\USER\Downloads\Mapping-Project-Final"
 output_dir = os.path.join(base_dir, "output", "SNOMED")
 input_file = os.path.join(output_dir, "ICD_to_SNOMED.xlsx")
 
@@ -81,8 +81,9 @@ for idx, row in sampled_df.iterrows():
         'Lab_Item': row['รายการตรวจ lab'],
         'SNOMED_FSN': row['ชื่อ FSN'],
         'AI_Label': ai_label,
-        'System_Matched': system_predicted_positive,
-        'LLM_Agreed': llm_agrees
+        'AI_Prediction_is_Mapped': system_predicted_positive,
+        'Expert_Review_Agrees': llm_agrees,
+        'Evaluation_Result': 'True Positive' if (system_predicted_positive and llm_agrees) else ('False Positive' if (system_predicted_positive and not llm_agrees) else ('True Negative' if (not system_predicted_positive and llm_agrees) else 'False Negative'))
     })
 
 # Calculate metrics
@@ -98,6 +99,40 @@ print("--------------------------\n")
 
 # Save report
 report_df = pd.DataFrame(results_log)
-report_path = os.path.join(output_dir, "LLM_Evaluation_Report_SNOMED.xlsx")
-report_df.to_excel(report_path, index=False)
+
+# Create Summary Metrics DataFrame
+metrics_df = pd.DataFrame([{
+    'Metric': 'True Positives (TP)', 'Value': true_positive, 'Description': 'AI mapped correctly and Expert agreed'
+}, {
+    'Metric': 'False Positives (FP)', 'Value': false_positive, 'Description': 'AI mapped it, but Expert says it is wrong (Hallucination)'
+}, {
+    'Metric': 'True Negatives (TN)', 'Value': true_negative, 'Description': 'AI left it unmapped (-), and Expert agreed it should be unmapped'
+}, {
+    'Metric': 'False Negatives (FN)', 'Value': false_negative, 'Description': 'AI left it unmapped (-), but Expert says it could have been mapped'
+}, {
+    'Metric': 'Precision', 'Value': f"{precision:.4f}", 'Description': 'Accuracy of positive predictions (TP / (TP + FP))'
+}, {
+    'Metric': 'Recall', 'Value': f"{recall:.4f}", 'Description': 'Ability to find all valid mappings (TP / (TP + FN))'
+}, {
+    'Metric': 'F1-Score', 'Value': f"{f1_score:.4f}", 'Description': 'Harmonic mean of Precision and Recall'
+}])
+
+# Create Data Dictionary DataFrame
+dict_df = pd.DataFrame([
+    {'Column Name': 'Lab_Item', 'Explanation': 'ชื่อรายการสั่งตรวจทางห้องปฏิบัติการจากฐานข้อมูล ICD-10'},
+    {'Column Name': 'SNOMED_FSN', 'Explanation': 'ชื่อมาตรฐาน SNOMED-CT ที่ระบบ AI ทำนายออกมา'},
+    {'Column Name': 'AI_Label', 'Explanation': 'ระดับความมั่นใจของ AI (Very High, High, Medium, Low, Rejected)'},
+    {'Column Name': 'AI_Prediction_is_Mapped', 'Explanation': 'ระบบ AI ได้ทำการจับคู่รหัสหรือไม่ (True = จับคู่, False = ปล่อยว่าง/Unmapped)'},
+    {'Column Name': 'Expert_Review_Agrees', 'Explanation': 'ผู้เชี่ยวชาญ (หรือ LLM Validator) เห็นด้วยกับการตัดสินใจของ AI หรือไม่'},
+    {'Column Name': 'Evaluation_Result', 'Explanation': 'ผลการประเมินทางสถิติ (True Positive, False Positive, True Negative, False Negative)'}
+])
+
+report_path = os.path.join(output_dir, "LLM_Evaluation_Report.xlsx")
+os.makedirs(os.path.dirname(report_path), exist_ok=True)
+
+with pd.ExcelWriter(report_path, engine='openpyxl') as writer:
+    report_df.to_excel(writer, sheet_name='Evaluation_Data', index=False)
+    metrics_df.to_excel(writer, sheet_name='Metrics_Summary', index=False)
+    dict_df.to_excel(writer, sheet_name='Data_Dictionary', index=False)
+
 print(f"Saved recovered report to {report_path}")

@@ -9,8 +9,11 @@ To achieve maximum accuracy and follow strict project guidelines, this project u
 
 ### 🔍 Methodological Highlights
 1. **TMLT Attribute Combination**: Instead of just using names, the system dynamically combines 4 core TMLT attributes (`TMLT_Name`, `COMPONENT`, `SPECIMEN`, `METHOD`) into a single descriptive sentence to capture the most accurate clinical context before semantic matching.
-2. **Strict Category Filtering (SNOMED-CT)**: The pipeline adheres to precise target guidelines by exclusively searching within the `procedure` and `regime/therapy` categories of SNOMED-CT, preventing false-positive mappings to morphological abnormalities or unrelated disorders.
-3. **Hard Conflict Rules & Confidence Labeling**: The model retrieves the Top-5 candidates and applies strict domain rules (e.g. Antigens vs Antibodies). It then automatically provides an `AI_Label` (`High Confidence` for scores >= 0.85, etc.) to guide medical coders.
+2. **Strict Category Filtering (SNOMED-CT)**: The pipeline adheres to precise target guidelines by exclusively searching within the `procedure` and `regime/therapy` categories of SNOMED-CT. **Note on Therapy**: In the SNOMED-CT hierarchy, therapeutic interventions (e.g., Chemotherapy, Physical therapy) are formally categorized under `regime/therapy`. By including both, the system ensures comprehensive coverage of all actionable medical orders while preventing false-positive mappings to morphological abnormalities or unrelated disorders.
+3. **Hard Conflict Rules & Confidence Labeling**: The model retrieves the Top-5 candidates and applies strict domain rules (e.g. Antigens vs Antibodies). It then automatically provides an `AI_Label` to guide medical coders based on precise Cosine Similarity thresholds:
+   - **Very High Confidence (Score >= 0.85)**: Represents near-exact string and semantic matches with virtually no clinical ambiguity.
+   - **High Confidence (Score >= 0.70)**: Strong semantic matches with minor phrasing differences.
+   - **Medium/Low/Rejected (Score < 0.70)**: Indicates potential clinical ambiguity or hallucinations, which strictly triggers the Rule-Based and AI Mega Batch validation layers.
 4. **Automated F1-Score Evaluation**: Dedicated evaluation scripts (`step3b` and `step4b`) automatically sample the results and simulate LLM-based heuristic checks to generate accuracy reports (Precision, Recall, F1-Score) for stakeholders.
 
 ## 📁 Project Structure
